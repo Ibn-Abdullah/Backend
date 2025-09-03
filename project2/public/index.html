@@ -17,7 +17,7 @@
 	<body>
 		<section id="auth">
 			<div>
-				<h2 className="sign-up-text">Login</h2>
+				<h2 class="sign-up-text">Login</h2>
 				<p>Create an account!</p>
 			</div>
 
@@ -27,7 +27,7 @@
 			<button id="authBtn" onclick="authenticate()">Submit</button>
 			<hr />
 			<div class="register-content">
-				<p>Don&apos;t have an account?</p>
+				<p>Don't have an account?</p>
 				<button onclick="toggleIsRegister()" id="registerBtn">Sign up</button>
 			</div>
 		</section>
@@ -70,9 +70,6 @@
 		const password = document.getElementById("passwordInput");
 		const registerBtn = document.getElementById("registerBtn");
 		const authBtn = document.getElementById("authBtn");
-		const addTodoBtn = document.getElementById("addTodoBtn");
-		// const deleteBtn = document.getElementById('')
-		// const updateBtn =
 
 		// PAGE RENDERING LOGIC
 		async function showDashboard() {
@@ -164,8 +161,6 @@
 			main.innerHTML = todoList;
 		}
 
-		// showDashboard()
-
 		// AUTH LOGIC
 
 		async function toggleIsRegister() {
@@ -182,9 +177,13 @@
 		}
 
 		async function authenticate() {
+			console.log("Authenticate function called!");
+			
 			// access email and pass values
 			const emailVal = email.value;
 			const passVal = password.value;
+
+			console.log("Email:", emailVal, "Password:", passVal);
 
 			// guard clauses... if authenticating, return
 			if (
@@ -195,33 +194,39 @@
 				passVal.length < 6 ||
 				!emailVal.includes("@")
 			) {
+				console.log("Guard clause triggered");
+				if (!emailVal || !passVal) {
+					textError.innerText = "Please enter both email and password";
+					textError.style.display = "block";
+				} else if (passVal.length < 6) {
+					textError.innerText = "Password must be at least 6 characters";
+					textError.style.display = "block";
+				} else if (!emailVal.includes("@")) {
+					textError.innerText = "Please enter a valid email address";
+					textError.style.display = "block";
+				}
 				return;
 			}
 
 			// reset error and set isAuthenticating to true
-			error.style.display = "none";
+			textError.style.display = "none";
 			isAuthenticating = true;
 			authBtn.innerText = "Authenticating...";
 
 			try {
 				let data;
-				if (isRegistration) {
-					// register an account
-					const response = await fetch(apiBase + "auth/register", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ username: emailVal, password: passVal }),
-					});
-					data = await response.json();
-				} else {
-					// login an account
-					const response = await fetch(apiBase + "auth/login", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ username: emailVal, password: passVal }),
-					});
-					data = await response.json();
-				}
+				const endpoint = isRegistration ? "auth/register" : "auth/login";
+				console.log("Making request to:", apiBase + endpoint);
+				
+				const response = await fetch(apiBase + endpoint, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ username: emailVal, password: passVal }),
+				});
+				
+				console.log("Response status:", response.status);
+				data = await response.json();
+				console.log("Response data:", data);
 
 				if (data.token) {
 					token = data.token;
@@ -236,12 +241,12 @@
 					// show dashboard
 					showDashboard();
 				} else {
-					throw Error("❌ Failed to authenticate...");
+					throw new Error(data.message || "❌ Failed to authenticate...");
 				}
 			} catch (err) {
-				console.log(err.message);
-				error.innerText = err.message;
-				error.style.display = "block";
+				console.log("Error:", err.message);
+				textError.innerText = err.message;
+				textError.style.display = "block";
 			} finally {
 				authBtn.innerText = "Submit";
 				isAuthenticating = false;
@@ -255,14 +260,22 @@
 		// CRUD LOGIC
 
 		async function fetchTodos() {
+			console.log("Fetching todos with token:", token);
 			isLoading = true;
-			const response = await fetch(apiBase + "todos", {
-				headers: { Authorization: token },
-			});
-			const todosData = await response.json();
-			todos = todosData;
-			isLoading = false;
-			renderTodos();
+			try {
+				const response = await fetch(apiBase + "todos", {
+					headers: { Authorization: token },
+				});
+				console.log("Todos response status:", response.status);
+				const todosData = await response.json();
+				console.log("Todos data:", todosData);
+				todos = todosData;
+				renderTodos();
+			} catch (err) {
+				console.error("Error fetching todos:", err);
+			} finally {
+				isLoading = false;
+			}
 		}
 
 		async function updateTodo(index) {

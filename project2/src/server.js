@@ -15,19 +15,44 @@ const __dirname = dirname(__filename);
 
 // Middleware
 app.use(express.json());
-// Serves the HTML file from the /public directory
-// Tells express to serve all files from the public folder as static assets / file. Any requests for the css files will be resolved to the public directory.
-app.use(express.static(path.join(__dirname, "../public")));
 
-// Serving up the HTML file from the /public directory
-app.get("/", (req, res) => {
-	res.sendFile(path.join(__dirname, "public", "index.html"));
+// CORS middleware for development
+app.use((req, res, next) => {
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header(
+		"Access-Control-Allow-Headers",
+		"Origin, X-Requested-With, Content-Type, Accept, Authorization"
+	);
+	res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+	next();
 });
 
-// Routes
+// Serves the HTML file from the /public directory
+// Tells express to serve all files from the public folder as static assets
+app.use(express.static(path.join(__dirname, "../public")));
+
+// Routes - IMPORTANT: API routes must come BEFORE the catch-all route
 app.use("/auth", authRoutes);
 app.use("/todos", authMiddleware, todoRoutes);
 
+// Serving up the HTML file from the /public directory (catch-all route)
+app.get("*", (req, res) => {
+	res.sendFile(path.join(__dirname, "../public", "index.html"));
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+	console.error("Server Error:", err);
+	res.status(500).json({
+		message: "Internal server error",
+		error:
+			process.env.NODE_ENV === "development"
+				? err.message
+				: "Something went wrong",
+	});
+});
+
 app.listen(PORT, () => {
 	console.log(`Server has started on port: ${PORT}`);
+	console.log(`Visit: http://localhost:${PORT}`);
 });

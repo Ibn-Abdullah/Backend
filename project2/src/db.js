@@ -12,12 +12,13 @@ db.exec(`
   )
 `);
 
-// todos table
+// todos table - FIXED: Added 'completed' column
 db.exec(`
   CREATE TABLE IF NOT EXISTS todos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     task TEXT,
+    completed INTEGER DEFAULT 0,
     FOREIGN KEY(user_id) REFERENCES users(id)
   )
 `);
