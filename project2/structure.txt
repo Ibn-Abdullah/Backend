@@ -1,0 +1,19 @@
+Folder PATH listing
+Volume serial number is 8E43-C222
+C:.
+¦   .env
+¦   package.json
+¦   structure.txt
+¦   
++---public
++---src
+    ¦   db.js
+    ¦   server.js
+    ¦   
+    +---middleware
+    ¦       authMiddleware.js
+    ¦       
+    +---routes
+            authRoutes.js
+            todoRoutes.js
+            
